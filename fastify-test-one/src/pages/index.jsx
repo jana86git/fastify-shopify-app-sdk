@@ -21,7 +21,7 @@ export default function Index() {
   
     return (
         <div>
-            <h1>Home.... hello good morning</h1>
+            <h1>Home.... FASTIFY TEST ONE</h1>
             <Button onClick={fetchShop}>Fetch Shop</Button>
         </div>
     )

@@ -2,12 +2,19 @@ import { getAccessToken } from '../../helper/getAccessToken.js';
 import jwt from 'jsonwebtoken';
 import Shop from '../../models/Shop.js';
 import { runGraphiql } from '../../helper/runGraphiql.js';
+import { getAppCredentials } from '../../helper/getAppCredentials.js';
 export const handleAuthCallback = async (req, reply) => {
     try {
         const { shop, code, hmac, state } = req.query;
         const jwt_secret = process.env.JWT_SECRET;
-        const client_id = process.env.SHOPIFY_CLIENT_ID;
-        const client_secret = process.env.SHOPIFY_CLIENT_SECRET;
+        
+        // Get app credentials from database based on URL
+        const credentials = await getAppCredentials(req);
+        if (!credentials) {
+            return reply.code(500).send('App credentials not found');
+        }
+        
+        const { CLIENT_ID: client_id, CLIENT_SECRET: client_secret, APP_ROUTE } = credentials;
 
         if (!shop || !code || !hmac || !state) {
             return reply.code(400).send('Missing parameters');
@@ -39,25 +46,9 @@ export const handleAuthCallback = async (req, reply) => {
         
         console.log("Shop data stored using Mongoose");
 
-        // Create JWT token with shop and access token
-        const token = jwt.sign(
-            { 
-                shop,
-                accessToken
-            },
-            jwt_secret,
-            { expiresIn: '24h' }
-        );
-
-        // Set the JWT as a cookie
-        reply.setCookie('shopify_session', token, {
-            path: '/',
-            signed: true,
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        });
+        // No need for custom session cookies when using App Bridge!
+        // App Bridge handles session tokens automatically
+        console.log("Access token stored in database, App Bridge will handle sessions");
 
         const data = await runGraphiql({
             query: `
@@ -77,8 +68,9 @@ export const handleAuthCallback = async (req, reply) => {
         const appHandle = data?.data?.currentAppInstallation?.app?.handle;
         console.log("appHandle is ::  --->>>> ", appHandle);
 
-        // Redirect to the root path
-        return reply.redirect(`https://${shop}/admin/apps/${appHandle}`);
+        // With App Bridge, redirect to your React app
+        // App Bridge will handle authentication and session management
+        return reply.redirect(`${credentials.HOST}/${APP_ROUTE}/?shop=${shop}&host=${req.query.host}`);
        
     } catch (error) {
         console.log("controllers/auth/handleAuthCallback | error is:---> ", error);

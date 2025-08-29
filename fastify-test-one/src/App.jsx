@@ -17,20 +17,15 @@ export default function App() {
 
   return (
 
-    <BrowserRouter>
+    <BrowserRouter basename="/app-one">
       <AppProvider i18n={enTranslations}>
         <ui-title-bar title="Shop App Builder">
-
-        </ui-title-bar>
-
-        <ui-title-bar title="Shop App Builder">
-
         </ui-title-bar>
 
 
         <ui-nav-menu>
-          <a href="/" rel="home">Home</a>
-          <a href="/About">About</a>
+          <Link to="/" rel="home">Home</Link>
+          <Link to="/about">About</Link>
         </ui-nav-menu>
 
 
