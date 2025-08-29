@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import Shop from '../models/Shop.js';
+import { getAppCredentials } from '../helper/getAppCredentials.js';
 
 /**
  * Middleware to validate App Bridge session tokens
@@ -60,11 +61,4 @@ function extractAppRoute(req) {
     return urlParts[1]; // Assuming format /{appRoute}/...
 }
 
-/**
- * Placeholder for getAppCredentials - you can import this from your helper
- */
-async function getAppCredentials(req) {
-    // This should import your actual getAppCredentials function
-    // For now, return null to prevent errors
-    return null;
-}
+

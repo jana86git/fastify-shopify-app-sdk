@@ -13,6 +13,7 @@ import { getAppCredentials } from './helper/getAppCredentials.js';
 import connectDB from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { validateSessionToken } from './middleware/validateSession.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -123,7 +124,14 @@ fastify.get('/:appRoute', installer);
 fastify.get('/server/:appRoute/auth/callback', handleAuthCallback);
 
 fastify.get('/server/:appRoute/get-data', async (req, reply) => {
-    // const APP_ROUTE = req.params.appRoute;
+
+     await validateSessionToken(req, reply);
+
+    // console.log("isValidSession is :: --->>>> ", isValidSession);
+    // if (!isValidSession) {
+    //     return reply.code(401).send({ error: 'Invalid session token' });
+    // }
+    const APP_ROUTE = req.params.appRoute;
     const data = await getAppCredentials(req);
     return reply.send(data);
 
