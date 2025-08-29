@@ -4,9 +4,11 @@ dotenv.config();
 import Fastify from 'fastify'
 import fs from 'fs';
 import cookie from '@fastify/cookie';
+import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { installer } from './controllers/auth/installer.js';
 import { handleAuthCallback } from './controllers/auth/handleAuthCallback.js';
+import { getAppCredentials } from './helper/getAppCredentials.js';
 
 import connectDB from './db.js';
 import path from 'path';
@@ -25,6 +27,21 @@ const fastify = Fastify({
 })
 
 await connectDB();
+
+// Register CORS plugin to allow all origins
+fastify.register(async function (fastify) {
+    fastify.addHook('preHandler', async (request, reply) => {
+        const corsHandler = cors({
+            origin: '*', // Allow all origins
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization']
+        });
+        
+        return new Promise((resolve) => {
+            corsHandler(request.raw, reply.raw, resolve);
+        });
+    });
+});
 
 // Register cookie plugin
 await fastify.register(cookie, {
@@ -104,6 +121,14 @@ fastify.setNotFoundHandler(async (request, reply) => {
 // Dynamic routes for different app handles
 fastify.get('/:appRoute', installer);
 fastify.get('/server/:appRoute/auth/callback', handleAuthCallback);
+
+fastify.get('/server/:appRoute/get-data', async (req, reply) => {
+    // const APP_ROUTE = req.params.appRoute;
+    const data = await getAppCredentials(req);
+    return reply.send(data);
+
+    // return reply.send({message: 'Data fetched successfully'});
+});
 
 // Run the server!
 try {
